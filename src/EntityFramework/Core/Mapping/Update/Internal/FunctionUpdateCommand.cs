@@ -530,7 +530,7 @@ namespace System.Data.Entity.Core.Mapping.Update.Internal
                 return result;
             }
 
-            // order by key values
+            // order by key value count
             var thisInputIdentifierCount = (null == _inputIdentifiers ? 0 : _inputIdentifiers.Count);
             var otherInputIdentifierCount = (null == other._inputIdentifiers ? 0 : other._inputIdentifiers.Count);
             result = thisInputIdentifierCount - otherInputIdentifierCount;
@@ -538,20 +538,31 @@ namespace System.Data.Entity.Core.Mapping.Update.Internal
             {
                 return result;
             }
-            for (var i = 0; i < thisInputIdentifierCount; i++)
-            {
-                var thisParameter = _inputIdentifiers[i].Value;
-                var otherParameter = other._inputIdentifiers[i].Value;
-                result = ByValueComparer.Default.Compare(thisParameter.Value, otherParameter.Value);
-                if (0 != result)
-                {
-                    return result;
-                }
-            }
 
-            // If the result is still zero, it means key values are all the same. Switch to synthetic identifiers
-            // to differentiate.
-            for (var i = 0; i < thisInputIdentifierCount; i++)
+			// order by key types/values
+			for (var i = 0; i < thisInputIdentifierCount; i++)
+			{
+				var thisParameter = _inputIdentifiers[i].Value;
+				var otherParameter = other._inputIdentifiers[i].Value;
+
+				// order by key types
+				result = (int)thisParameter.DbType - (int)otherParameter.DbType;
+				if (0 != result)
+				{
+					return result;
+				}
+
+				// order by key values
+				result = ByValueComparer.Default.Compare(thisParameter.Value, otherParameter.Value);
+				if (0 != result)
+				{
+					return result;
+				}
+			}
+
+			// If the result is still zero, it means key values are all the same. Switch to synthetic identifiers
+			// to differentiate.
+			for (var i = 0; i < thisInputIdentifierCount; i++)
             {
                 var thisIdentifier = _inputIdentifiers[i].Key;
                 var otherIdentifier = other._inputIdentifiers[i].Key;
